@@ -1,0 +1,81 @@
+import {
+  Controller,
+  Post,
+  Get,
+  UseGuards,
+  Body,
+  Req,
+  Param,
+  Put,
+  Delete,
+} from '@nestjs/common';
+import { BudgetService } from './budget.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { CreateBudgetDto } from './dto/create-budget.dto';
+import { CreateSpendingDto } from './dto/create-spending.dto';
+import { UpdateSpendingDto } from './dto/update-spending.dto';
+
+@Controller('budget')
+export class BudgetController {
+  constructor(private readonly budgetService: BudgetService) {}
+
+  // ✅ 예산 설정
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createBudget(@Body() createBudgetDto: CreateBudgetDto, @Req() req) {
+    const googleId = req.user.googleId;
+    return this.budgetService.createBudget(createBudgetDto, googleId);
+  }
+
+  // ✅ 예산 조회
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  async getBudget(@Req() req) {
+    const googleId = req.user.googleId;
+    return this.budgetService.getBudget(googleId);
+  }
+
+  // ✅ 지출 추가
+  @Post('spending')
+  @UseGuards(JwtAuthGuard)
+  async addSpending(@Body() createSpendingDto: CreateSpendingDto, @Req() req) {
+    const googleId = req.user.googleId;
+    return this.budgetService.addSpending(createSpendingDto, googleId);
+  }
+
+  // ✅ 지출 내역 조회
+  @Get('spending')
+  @UseGuards(JwtAuthGuard)
+  async getSpending(@Req() req) {
+    const googleId = req.user.googleId;
+    return this.budgetService.getSpending(googleId);
+  }
+
+  // ✅ 특정 카테고리의 지출 내역 조회
+  @Get('spending/:category')
+  @UseGuards(JwtAuthGuard)
+  async getSpendingByCategory(@Req() req, @Param('category') category: string) {
+    const googleId = req.user.googleId;
+    return this.budgetService.getSpendingByCategory(googleId, category);
+  }
+
+  // ✅ 지출 수정
+  @Put('spending/:uid')
+  @UseGuards(JwtAuthGuard)
+  async updateSpending(
+    @Param('uid') uid: string,
+    @Body() updateSpendingDto: UpdateSpendingDto,
+    @Req() req,
+  ) {
+    const googleId = req.user.googleId;
+    return this.budgetService.updateSpending(googleId, uid, updateSpendingDto);
+  }
+
+  // ✅ 지출 삭제
+  @Delete('spending/:uid')
+  @UseGuards(JwtAuthGuard)
+  async deleteSpending(@Param('uid') uid: string, @Req() req) {
+    const googleId = req.user.googleId;
+    return this.budgetService.deleteSpending(googleId, uid);
+  }
+}
