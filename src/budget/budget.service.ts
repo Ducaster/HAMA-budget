@@ -246,4 +246,17 @@ export class BudgetService {
     // ✅ 성공 메시지만 반환
     return { message: 'Spending record successfully deleted' };
   }
+
+  // ✅ 사용자 예산 삭제 (MongoDB에서 삭제)
+  async deleteBudget(googleId: string) {
+    const budget = await this.budgetModel.findOne({ googleId }).exec();
+
+    if (!budget) {
+      throw new NotFoundException('Budget not found for user');
+    }
+
+    await this.budgetModel.deleteOne({ googleId }).exec();
+
+    return { message: 'User budget successfully deleted' };
+  }
 }

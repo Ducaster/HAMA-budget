@@ -78,4 +78,12 @@ export class BudgetController {
     const googleId = req.user.googleId;
     return this.budgetService.deleteSpending(googleId, uid);
   }
+
+  // ✅ 사용자 예산 삭제
+  @Delete()
+  @UseGuards(JwtAuthGuard) // JWT 인증 필수
+  async deleteBudget(@Req() req) {
+    const googleId = req.user.googleId; // JWT에서 Google ID 추출
+    return this.budgetService.deleteBudget(googleId);
+  }
 }
