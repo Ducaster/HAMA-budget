@@ -55,9 +55,12 @@ export class BudgetService {
     return user.monthlyBudget;
   }
 
-  // ✅ 사용자 예산 설정 (업데이트 또는 생성)
+  // ✅ 사용자 예산 설정 (년도, 월별 카테고리 예산 추가)
   async createBudget(createBudgetDto: CreateBudgetDto, googleId: string) {
-    const totalBudget = Object.values(createBudgetDto).reduce(
+    const { year, month, categories } = createBudgetDto;
+
+    // ✅ 총 예산 계산
+    const totalBudget = Object.values(categories).reduce(
       (sum, value) => sum + value,
       0,
     );
@@ -73,37 +76,35 @@ export class BudgetService {
     // ✅ 기존 예산이 있는지 확인
     let budget = await this.budgetModel.findOne({ googleId }).exec();
 
-    if (budget) {
-      // ✅ 기존 예산이 있다면 업데이트
-      Object.assign(budget, createBudgetDto);
-      budget.totalBudget = totalBudget;
-      return budget.save();
-    } else {
-      // ✅ 기존 예산이 없으면 새로 생성
-      const newBudget = new this.budgetModel({
-        googleId,
-        ...createBudgetDto,
-        totalBudget,
-        totalSpent: 0,
-      });
-      return newBudget.save();
+    if (!budget) {
+      budget = new this.budgetModel({ googleId, budgets: [], totalSpent: 0 });
     }
+
+    // ✅ 해당 년/월 예산이 있는지 확인
+    const existingBudgetIndex = budget.budgets.findIndex(
+      (b) => b.year === year && b.month === month,
+    );
+
+    if (existingBudgetIndex !== -1) {
+      // ✅ 기존 예산이 있다면 업데이트
+      budget.budgets[existingBudgetIndex].categories = categories;
+    } else {
+      // ✅ 없으면 새로 추가
+      budget.budgets.push({ year, month, categories });
+    }
+
+    return budget.save();
   }
 
-  // ✅ 사용자 예산 조회 (지출 내역 제외)
-  async getBudget(googleId: string): Promise<Partial<Budget>> {
-    const budget = await this.budgetModel
-      .findOne({ googleId })
-      .select(
-        '-spending -totalSpent -diaper -sanitary -feeding -skincare -food -toys -bedding -fashion -other',
-      ) // ❌ 지출 내역 & 총 지출 제외
-      .exec();
+  // ✅ 전체 예산 조회 (특정 년/월 없이 모든 예산 반환)
+  async getAllBudgets(googleId: string) {
+    const budget = await this.budgetModel.findOne({ googleId }).exec();
 
     if (!budget) {
       throw new NotFoundException('Budget not found for user');
     }
 
-    return budget;
+    return budget.budgets; // 모든 예산 데이터 반환
   }
 
   // ✅ 지출 기록 추가 (UID 자동 생성)

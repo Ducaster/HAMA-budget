@@ -8,6 +8,7 @@ import {
   Param,
   Put,
   Delete,
+  Query,
 } from '@nestjs/common';
 import { BudgetService } from './budget.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -20,7 +21,7 @@ import { CreateMultipleSpendingDto } from './dto/create-multiple-spending.dto';
 export class BudgetController {
   constructor(private readonly budgetService: BudgetService) {}
 
-  // ✅ 예산 설정
+  // ✅ 특정 년/월의 예산 설정
   @Post()
   @UseGuards(JwtAuthGuard)
   async createBudget(@Body() createBudgetDto: CreateBudgetDto, @Req() req) {
@@ -28,12 +29,12 @@ export class BudgetController {
     return this.budgetService.createBudget(createBudgetDto, googleId);
   }
 
-  // ✅ 예산 조회
+  // ✅ 전체 예산 조회 API
   @Get()
   @UseGuards(JwtAuthGuard)
-  async getBudget(@Req() req) {
+  async getAllBudgets(@Req() req) {
     const googleId = req.user.googleId;
-    return this.budgetService.getBudget(googleId);
+    return this.budgetService.getAllBudgets(googleId);
   }
 
   // ✅ 지출 추가

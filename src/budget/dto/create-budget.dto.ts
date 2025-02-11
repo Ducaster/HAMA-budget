@@ -1,13 +1,15 @@
-import { IsNumber } from 'class-validator';
+import { IsNumber, IsNotEmpty, IsObject } from 'class-validator';
 
 export class CreateBudgetDto {
-  @IsNumber() diaperBudget: number;
-  @IsNumber() sanitaryBudget: number;
-  @IsNumber() feedingBudget: number;
-  @IsNumber() skincareBudget: number;
-  @IsNumber() foodBudget: number;
-  @IsNumber() toysBudget: number;
-  @IsNumber() beddingBudget: number;
-  @IsNumber() fashionBudget: number;
-  @IsNumber() otherBudget: number;
+  @IsNumber()
+  @IsNotEmpty()
+  year: number; // ✅ 년도 추가
+
+  @IsNumber()
+  @IsNotEmpty()
+  month: number; // ✅ 월 추가
+
+  @IsObject()
+  @IsNotEmpty()
+  categories: Record<string, number>; // ✅ 카테고리별 예산 객체
 }
