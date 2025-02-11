@@ -131,11 +131,6 @@ export class BudgetService {
     // ✅ 총 지출 금액 계산
     budget.totalSpent += amount;
 
-    // ✅ 예산 초과 체크
-    if (budget.totalSpent > budget.totalBudget) {
-      throw new ForbiddenException('Total spending exceeds user budget');
-    }
-
     return budget.save();
   }
 
