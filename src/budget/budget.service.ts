@@ -12,6 +12,7 @@ import { Budget, BudgetDocument } from './schemas/budget.schema';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { CreateSpendingDto } from './dto/create-spending.dto';
 import { UpdateSpendingDto } from './dto/update-spending.dto';
+import { CreateMultipleSpendingDto } from './dto/create-multiple-spending.dto';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
@@ -132,6 +133,50 @@ export class BudgetService {
     budget.totalSpent += amount;
 
     return budget.save();
+  }
+
+  // ✅ 여러 개의 지출 추가 (배열로 입력받음)
+  async addMultipleSpendings(
+    createMultipleSpendingDto: CreateMultipleSpendingDto,
+    googleId: string,
+  ) {
+    const { spendings } = createMultipleSpendingDto;
+
+    let budget = await this.budgetModel.findOne({ googleId }).exec();
+
+    if (!budget) {
+      throw new NotFoundException('Budget not found for user');
+    }
+
+    let totalNewSpending = 0;
+
+    // ✅ 지출 내역 추가
+    for (const spending of spendings) {
+      const { date, category, itemName, amount } = spending;
+
+      // ✅ 유효한 카테고리인지 확인
+      if (!this.validCategories.includes(category)) {
+        throw new BadRequestException(`Invalid category: ${category}`);
+      }
+
+      // ✅ UID를 포함하여 지출 항목 추가
+      const newSpending = {
+        uid: uuidv4(), // ✅ UUID 자동 생성
+        date,
+        itemName,
+        amount,
+      };
+
+      budget[category].push(newSpending);
+      totalNewSpending += amount;
+    }
+
+    // ✅ 총 지출 금액 업데이트
+    budget.totalSpent += totalNewSpending;
+    await budget.save();
+
+    // ✅ 추가된 지출 항목 반환
+    return { message: 'Multiple spendings successfully added', spendings };
   }
 
   // ✅ 지출 내역 조회

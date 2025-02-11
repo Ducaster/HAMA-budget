@@ -14,6 +14,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { CreateSpendingDto } from './dto/create-spending.dto';
 import { UpdateSpendingDto } from './dto/update-spending.dto';
+import { CreateMultipleSpendingDto } from './dto/create-multiple-spending.dto';
 
 @Controller('budget')
 export class BudgetController {
@@ -41,6 +42,20 @@ export class BudgetController {
   async addSpending(@Body() createSpendingDto: CreateSpendingDto, @Req() req) {
     const googleId = req.user.googleId;
     return this.budgetService.addSpending(createSpendingDto, googleId);
+  }
+
+  // ✅ 여러 개의 지출 기록 추가 API
+  @Post('spendings')
+  @UseGuards(JwtAuthGuard) // JWT 인증 필수
+  async addMultipleSpendings(
+    @Body() createMultipleSpendingDto: CreateMultipleSpendingDto,
+    @Req() req,
+  ) {
+    const googleId = req.user.googleId; // JWT에서 Google ID 추출
+    return this.budgetService.addMultipleSpendings(
+      createMultipleSpendingDto,
+      googleId,
+    );
   }
 
   // ✅ 지출 내역 조회
