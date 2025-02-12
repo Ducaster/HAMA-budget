@@ -235,7 +235,7 @@ export class BudgetService {
       throw new NotFoundException('Budget not found for user');
     }
 
-    // ✅ UID에 해당하는 지출 항목 찾기
+    // ✅ 카테고리 내 지출 내역 찾기
     const spendingCategory = budget[category];
     const spendingIndex = spendingCategory.findIndex(
       (spending) => spending.uid === uid,
@@ -246,13 +246,11 @@ export class BudgetService {
     }
 
     // ✅ 기존 금액 차감 후 새로운 값 반영
-    budget.totalSpent -= spendingCategory[spendingIndex].amount; // 기존 금액 차감
-    spendingCategory[spendingIndex] = { uid, date, itemName, amount }; // 새 값으로 업데이트
-    budget.totalSpent += amount; // 새로운 금액 반영
+    budget.totalSpent -= spendingCategory[spendingIndex].amount;
+    spendingCategory[spendingIndex] = { uid, date, itemName, amount };
+    budget.totalSpent += amount;
 
     await budget.save();
-
-    // ✅ 수정된 지출 내역만 반환
     return spendingCategory[spendingIndex];
   }
 
