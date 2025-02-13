@@ -8,7 +8,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import Redis from 'ioredis';
-import { Budget, BudgetDocument } from './schemas/budget.schema';
+import { Budget, BudgetDocument, SpendingItem } from './schemas/budget.schema';
 import { CreateBudgetDto } from './dto/create-budget.dto';
 import { CreateSpendingDto } from './dto/create-spending.dto';
 import { UpdateSpendingDto } from './dto/update-spending.dto';
@@ -235,23 +235,53 @@ export class BudgetService {
       throw new NotFoundException('Budget not found for user');
     }
 
-    // ✅ 카테고리 내 지출 내역 찾기
-    const spendingCategory = budget[category];
-    const spendingIndex = spendingCategory.findIndex(
-      (spending) => spending.uid === uid,
-    );
+    let existingCategory: string | null = null;
+    let existingIndex: number = -1;
+    let existingSpending: SpendingItem | null = null;
 
-    if (spendingIndex === -1) {
+    // ✅ 모든 카테고리에서 해당 `uid`를 찾기
+    for (const cat of this.validCategories) {
+      const spendingCategory = budget[cat] as SpendingItem[]; // 타입 캐스팅 추가
+      const index = spendingCategory.findIndex(
+        (spending) => spending.uid === uid,
+      );
+
+      if (index !== -1) {
+        existingCategory = cat;
+        existingIndex = index;
+        existingSpending = spendingCategory[index];
+        break;
+      }
+    }
+
+    if (!existingSpending) {
       throw new NotFoundException(`Spending record with UID ${uid} not found.`);
     }
 
-    // ✅ 기존 금액 차감 후 새로운 값 반영
-    budget.totalSpent -= spendingCategory[spendingIndex].amount;
-    spendingCategory[spendingIndex] = { uid, date, itemName, amount };
+    // ✅ 기존 총 지출 금액 차감
+    budget.totalSpent -= existingSpending.amount;
+
+    // ✅ 기존 카테고리에서 해당 지출 제거
+    if (existingCategory) {
+      budget[existingCategory] = budget[existingCategory].filter(
+        (spending) => spending.uid !== uid,
+      );
+    }
+
+    // ✅ 새로운 카테고리에 지출 추가
+    const updatedSpending = { uid, date, itemName, amount };
+    budget[category].push(updatedSpending);
+
+    // ✅ 새로운 총 지출 금액 추가
     budget.totalSpent += amount;
 
     await budget.save();
-    return spendingCategory[spendingIndex];
+
+    // ✅ 카테고리도 함께 반환
+    return {
+      category, // 변경된 카테고리
+      spending: updatedSpending, // 수정된 지출 항목
+    };
   }
 
   // ✅ 지출 삭제 (성공 메시지만 반환)

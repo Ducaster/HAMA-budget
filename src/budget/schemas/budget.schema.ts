@@ -3,6 +3,13 @@ import { Document } from 'mongoose';
 
 export type BudgetDocument = Budget & Document;
 
+interface SpendingItem {
+  uid: string;
+  date: string;
+  itemName: string;
+  amount: number;
+}
+
 @Schema({ timestamps: true })
 export class Budget {
   @Prop({ required: true })
@@ -25,55 +32,56 @@ export class Budget {
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  diaper: any[];
+  diaper: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  sanitary: any[];
+  sanitary: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  feeding: any[];
+  feeding: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  skincare: any[];
+  skincare: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  food: any[];
+  food: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  toys: any[];
+  toys: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  bedding: any[];
+  bedding: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  fashion: any[];
+  fashion: SpendingItem[];
 
   @Prop({
     type: [{ date: String, itemName: String, amount: Number, uid: String }],
     default: [],
   })
-  other: any[];
+  other: SpendingItem[];
 }
 
 export const BudgetSchema = SchemaFactory.createForClass(Budget);
+export { SpendingItem }; // Export for use in service
